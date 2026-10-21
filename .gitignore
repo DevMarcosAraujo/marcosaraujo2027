@@ -1,0 +1,26 @@
+# dependências e builds
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# segredos: nunca versionar
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# backups e logs
+backups/
+*.log
+npm-debug.log*
+
+# misc
+.DS_Store
+.vercel
