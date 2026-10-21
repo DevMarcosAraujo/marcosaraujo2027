@@ -13,6 +13,10 @@ RUN npm run build
 
 FROM node:22.12.0-alpine3.21 AS runner
 WORKDIR /app
+# Atualiza pacotes do Alpine e remove o npm/yarn: o runtime só precisa do node.
+RUN apk upgrade --no-cache \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+           /opt/yarn* /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \

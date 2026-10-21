@@ -12,6 +12,10 @@ RUN npm run build && npm prune --omit=dev
 
 FROM node:22.12.0-alpine3.21 AS runner
 WORKDIR /app
+# Atualiza pacotes do Alpine e remove o npm/yarn: o runtime só precisa do node.
+RUN apk upgrade --no-cache \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+           /opt/yarn* /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production \
     PORT=4000
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
