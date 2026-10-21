@@ -1,0 +1,35 @@
+# Desenvolvimento: só Postgres e Adminer, ligados apenas em 127.0.0.1.
+# Credenciais abaixo são só de dev e não valem para produção.
+# Uso: docker compose -f docker-compose.dev.yml up -d
+
+services:
+  db:
+    image: postgres:16.6-alpine3.21
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: meusite_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d meusite_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:4.8.1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata_dev:
