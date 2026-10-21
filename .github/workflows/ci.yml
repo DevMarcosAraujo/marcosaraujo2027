@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        app: [web, api]
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  audit:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        app: [web, api]
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+
+  gitleaks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trivy:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        app: [web, api]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem
+        run: docker build -t meu-site-${{ matrix.app }}:ci apps/${{ matrix.app }}
+      - name: Scan Trivy (falha em HIGH/CRITICAL com correção disponível)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: meu-site-${{ matrix.app }}:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
